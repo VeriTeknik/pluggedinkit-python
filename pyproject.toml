@@ -44,10 +44,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/pluggedin/pluggedin-python-sdk"
+Homepage = "https://github.com/VeriTeknik/pluggedinkit-python"
 Documentation = "https://docs.plugged.in/sdks/python"
-Repository = "https://github.com/pluggedin/pluggedin-python-sdk"
-Issues = "https://github.com/pluggedin/pluggedin-python-sdk/issues"
+Repository = "https://github.com/VeriTeknik/pluggedinkit-python"
+Issues = "https://github.com/VeriTeknik/pluggedinkit-python/issues"
 
 [tool.setuptools]
 packages = ["pluggedinkit", "pluggedinkit.services"]

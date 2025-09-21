@@ -1,6 +1,12 @@
 # Plugged.in Python SDK
 
+[![PyPI version](https://badge.fury.io/py/pluggedinkit.svg)](https://pypi.org/project/pluggedinkit/)
+[![Python Support](https://img.shields.io/pypi/pyversions/pluggedinkit.svg)](https://pypi.org/project/pluggedinkit/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Official Python SDK for the Plugged.in Library API. Full support for both synchronous and asynchronous operations with comprehensive type hints.
+
+**PyPI**: [https://pypi.org/project/pluggedinkit/](https://pypi.org/project/pluggedinkit/)
 
 ## Installation
 
@@ -488,8 +494,10 @@ MIT - see [LICENSE](LICENSE) for details.
 
 ## Support
 
+- **PyPI Package**: [https://pypi.org/project/pluggedinkit/](https://pypi.org/project/pluggedinkit/)
+- **GitHub Repository**: [https://github.com/VeriTeknik/pluggedinkit-python](https://github.com/VeriTeknik/pluggedinkit-python)
 - **Documentation**: [https://docs.plugged.in](https://docs.plugged.in)
-- **Issues**: [GitHub Issues](https://github.com/pluggedin/pluggedin-python-sdk/issues)
+- **Issues**: [GitHub Issues](https://github.com/VeriTeknik/pluggedinkit-python/issues)
 - **Discord**: [Join our community](https://discord.gg/pluggedin)
 
 ## Changelog
