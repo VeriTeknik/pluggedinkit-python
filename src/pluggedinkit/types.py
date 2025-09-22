@@ -77,7 +77,18 @@ class AIMetadata(BaseModel):
     context: Optional[str] = None
     generation_params: Optional[GenerationParams] = None
     prompt: Optional[str] = None
-    conversation_context: Optional[List[str]] = None
+    conversation_context: Optional[Union[List[str], List[Dict[str, str]]]] = None
+    update_reason: Optional[str] = None
+    changes_from_prompt: Optional[str] = None
+    change_summary: Optional[str] = None
+    source_documents: Optional[List[str]] = None
+    visibility: Optional[str] = None
+    session_id: Optional[str] = None
+    last_updated_by: Optional[ModelInfo] = None
+    last_update_timestamp: Optional[str] = None
+
+    class Config:
+        extra = "allow"  # Allow additional fields
 
 
 class ModelAttribution(BaseModel):
