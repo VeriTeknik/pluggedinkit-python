@@ -26,6 +26,7 @@ from .types import (
     UploadResponse,
     RagResponse,
     RagSourceDocument,
+    RagStorageStats,
     ModelInfo,
     AIMetadata,
 )
@@ -48,6 +49,7 @@ __all__ = [
     "UploadResponse",
     "RagResponse",
     "RagSourceDocument",
+    "RagStorageStats",
     "ModelInfo",
     "AIMetadata",
 ]

@@ -1,9 +1,9 @@
 """RAG service for Plugged.in SDK"""
 
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 from ..exceptions import PluggedInError
-from ..types import RagResponse, RagSourceDocument
+from ..types import RagResponse, RagSourceDocument, RagStorageStats
 
 if TYPE_CHECKING:
     from ..client import AsyncPluggedInClient, PluggedInClient
@@ -15,26 +15,20 @@ class RagService:
     def __init__(self, client: "PluggedInClient"):
         self.client = client
 
-    def query(self, query: str, project_uuid: Optional[str] = None) -> RagResponse:
+    def query(self, query: str, include_metadata: bool = True) -> RagResponse:
         """Query the knowledge base with a natural language question"""
-        payload = {"query": query}
-        if project_uuid:
-            payload["projectUuid"] = project_uuid
+        payload = {
+            "query": query,
+            "includeMetadata": include_metadata,
+        }
 
-        # Try library endpoint first, fallback to documents endpoint
-        try:
-            response = self.client.request("POST", "/api/library/rag/query", json=payload)
-        except Exception:
-            if self.client.debug:
-                print("[PluggedIn SDK] Falling back to documents RAG endpoint")
-            response = self.client.request("POST", "/api/documents/rag/query", json=payload)
-
-        data = response.json()
+        response = self.client.request("POST", "/api/rag/query", json=payload)
+        data = self._parse_rag_response(response)
         return self._transform_rag_response(data)
 
-    def ask_question(self, query: str, project_uuid: Optional[str] = None) -> str:
+    def ask_question(self, query: str) -> str:
         """Query knowledge base and get only the answer text"""
-        response = self.query(query, project_uuid)
+        response = self.query(query, include_metadata=False)
 
         if not response.success or not response.answer:
             raise PluggedInError(
@@ -43,11 +37,9 @@ class RagService:
 
         return response.answer
 
-    def query_with_sources(
-        self, query: str, project_uuid: Optional[str] = None
-    ) -> Dict[str, any]:
+    def query_with_sources(self, query: str) -> Dict[str, Union[str, List[RagSourceDocument]]]:
         """Query knowledge base and get answer with source documents"""
-        response = self.query(query, project_uuid)
+        response = self.query(query, include_metadata=True)
 
         if not response.success or not response.answer:
             raise PluggedInError(
@@ -62,110 +54,111 @@ class RagService:
     def find_relevant_documents(
         self,
         query: str,
-        project_uuid: Optional[str] = None,
         limit: int = 5,
     ) -> List[RagSourceDocument]:
         """Get relevant documents for a query without generating an answer"""
-        payload = {
-            "query": query,
-            "limit": limit,
-            "returnAnswer": False,
-        }
-        if project_uuid:
-            payload["projectUuid"] = project_uuid
+        response = self.query(query, include_metadata=True)
 
-        response = self.client.request("POST", "/api/documents/rag/search", json=payload)
-        data = response.json()
+        if not response.success:
+            raise PluggedInError(response.error or "Failed to search documents")
 
-        if not data.get("success"):
-            raise PluggedInError(data.get("error", "Failed to search documents"))
+        documents = response.documents or []
+        return documents[:limit]
 
-        documents = data.get("documents", [])
-        return [RagSourceDocument(**doc) for doc in documents]
-
-    def check_availability(self) -> Dict[str, any]:
+    def check_availability(self) -> Dict[str, Union[bool, Optional[str]]]:
         """Check if RAG is available and configured"""
         try:
-            response = self.client.request("GET", "/api/rag/health")
-            data = response.json()
-            return {
-                "available": data.get("available", False),
-                "message": data.get("message"),
-            }
-        except Exception:
+            self.query("__pluggedin_health_check__", include_metadata=False)
+            return {"available": True}
+        except Exception as exc:  # pragma: no cover - best effort
             return {
                 "available": False,
-                "message": "RAG service is not available",
+                "message": str(exc),
             }
 
-    def get_storage_stats(self, project_uuid: Optional[str] = None) -> Dict[str, any]:
-        """Get RAG storage statistics"""
-        params = {"projectUuid": project_uuid} if project_uuid else {}
-        response = self.client.request("GET", "/api/rag/stats", params=params)
-        data = response.json()
-
-        return {
-            "document_count": data.get("documentCount", 0),
-            "total_size": data.get("totalSize", 0),
-            "vector_count": data.get("vectorCount"),
-            "last_updated": data.get("lastUpdated"),
-        }
-
-    def refresh_document(
-        self, document_id: str, project_uuid: Optional[str] = None
-    ) -> Dict[str, any]:
-        """Refresh RAG index for a specific document"""
-        payload = {}
-        if project_uuid:
-            payload["projectUuid"] = project_uuid
+    def get_storage_stats(self, user_id: str) -> RagStorageStats:
+        """Get RAG storage statistics for the authenticated user"""
+        if not user_id:
+            raise PluggedInError("user_id is required to fetch storage statistics")
 
         response = self.client.request(
-            "POST", f"/api/rag/refresh/{document_id}", json=payload
+            "GET",
+            "/api/rag/storage-stats",
+            params={"user_id": user_id},
         )
         data = response.json()
 
-        return {
-            "success": data.get("success", False),
-            "message": data.get("message"),
-        }
-
-    def remove_document(
-        self, document_id: str, project_uuid: Optional[str] = None
-    ) -> Dict[str, any]:
-        """Remove a document from the RAG index"""
-        payload = {}
-        if project_uuid:
-            payload["projectUuid"] = project_uuid
-
-        response = self.client.request(
-            "DELETE", f"/api/rag/documents/{document_id}", json=payload
+        return RagStorageStats(
+            documents_count=data.get("documents_count", 0),
+            total_chunks=data.get("total_chunks", 0),
+            estimated_storage_mb=data.get("estimated_storage_mb", 0.0),
+            vectors_count=data.get("vectors_count"),
+            embedding_dimension=data.get("embedding_dimension"),
+            is_estimate=data.get("is_estimate", True),
         )
-        data = response.json()
 
-        return {
-            "success": data.get("success", False),
-            "message": data.get("message"),
-        }
+    def refresh_document(self, *args, **kwargs) -> None:
+        """Legacy refresh flow is no longer exposed via the public API."""
+        raise PluggedInError(
+            "Document refresh is no longer available via the public API."
+        )
 
-    def _transform_rag_response(self, data: Dict) -> RagResponse:
+    def remove_document(self, *args, **kwargs) -> None:
+        """Legacy remove flow is no longer exposed via the public API."""
+        raise PluggedInError(
+            "Document removal is no longer available via the public API."
+        )
+
+    def _parse_rag_response(self, response) -> Union[str, Dict]:
+        """Best-effort parsing for RAG responses that may return text or JSON."""
+        try:
+            return response.json()
+        except ValueError:
+            return response.text
+
+    def _transform_rag_response(self, data: Union[str, Dict]) -> RagResponse:
         """Transform API response to RagResponse type"""
-        if "success" in data:
-            return RagResponse(**data)
-
-        # Transform legacy format
-        if "answer" in data or "results" in data:
+        if isinstance(data, str):
             return RagResponse(
                 success=True,
-                answer=data.get("answer") or data.get("results"),
-                sources=data.get("sources", []),
-                document_ids=data.get("documentIds") or data.get("document_ids", []),
-                documents=data.get("documents", []),
+                answer=data,
+                sources=[],
+                document_ids=[],
+                documents=[],
             )
 
-        # Error response
+        if not isinstance(data, dict):
+            return RagResponse(
+                success=False,
+                error="Unexpected response format from RAG query endpoint",
+            )
+
+        answer = (
+            data.get("answer")
+            or data.get("response")
+            or data.get("results")
+            or data.get("message")
+            or ""
+        )
+
+        sources = data.get("sources") or []
+        document_ids = data.get("documentIds") or data.get("document_ids") or []
+
+        documents = [
+            RagSourceDocument(
+                id=document_id,
+                name=sources[index] if index < len(sources) else f"Document {index + 1}",
+            )
+            for index, document_id in enumerate(document_ids)
+        ]
+
         return RagResponse(
-            success=False,
-            error=data.get("error", "Unknown error occurred"),
+            success=data.get("success", True),
+            answer=answer,
+            sources=sources,
+            document_ids=document_ids,
+            documents=documents,
+            error=data.get("error"),
         )
 
 
@@ -175,26 +168,20 @@ class AsyncRagService:
     def __init__(self, client: "AsyncPluggedInClient"):
         self.client = client
 
-    async def query(self, query: str, project_uuid: Optional[str] = None) -> RagResponse:
+    async def query(self, query: str, include_metadata: bool = True) -> RagResponse:
         """Query the knowledge base with a natural language question"""
-        payload = {"query": query}
-        if project_uuid:
-            payload["projectUuid"] = project_uuid
+        payload = {
+            "query": query,
+            "includeMetadata": include_metadata,
+        }
 
-        # Try library endpoint first, fallback to documents endpoint
-        try:
-            response = await self.client.request("POST", "/api/library/rag/query", json=payload)
-        except Exception:
-            if self.client.debug:
-                print("[PluggedIn SDK] Falling back to documents RAG endpoint")
-            response = await self.client.request("POST", "/api/documents/rag/query", json=payload)
-
-        data = response.json()
+        response = await self.client.request("POST", "/api/rag/query", json=payload)
+        data = self._parse_rag_response(response)
         return self._transform_rag_response(data)
 
-    async def ask_question(self, query: str, project_uuid: Optional[str] = None) -> str:
+    async def ask_question(self, query: str) -> str:
         """Query knowledge base and get only the answer text"""
-        response = await self.query(query, project_uuid)
+        response = await self.query(query, include_metadata=False)
 
         if not response.success or not response.answer:
             raise PluggedInError(
@@ -204,10 +191,11 @@ class AsyncRagService:
         return response.answer
 
     async def query_with_sources(
-        self, query: str, project_uuid: Optional[str] = None
-    ) -> Dict[str, any]:
+        self,
+        query: str,
+    ) -> Dict[str, Union[str, List[RagSourceDocument]]]:
         """Query knowledge base and get answer with source documents"""
-        response = await self.query(query, project_uuid)
+        response = await self.query(query, include_metadata=True)
 
         if not response.success or not response.answer:
             raise PluggedInError(
@@ -222,108 +210,109 @@ class AsyncRagService:
     async def find_relevant_documents(
         self,
         query: str,
-        project_uuid: Optional[str] = None,
         limit: int = 5,
     ) -> List[RagSourceDocument]:
         """Get relevant documents for a query without generating an answer"""
-        payload = {
-            "query": query,
-            "limit": limit,
-            "returnAnswer": False,
-        }
-        if project_uuid:
-            payload["projectUuid"] = project_uuid
+        response = await self.query(query, include_metadata=True)
 
-        response = await self.client.request("POST", "/api/documents/rag/search", json=payload)
-        data = response.json()
+        if not response.success:
+            raise PluggedInError(response.error or "Failed to search documents")
 
-        if not data.get("success"):
-            raise PluggedInError(data.get("error", "Failed to search documents"))
+        documents = response.documents or []
+        return documents[:limit]
 
-        documents = data.get("documents", [])
-        return [RagSourceDocument(**doc) for doc in documents]
-
-    async def check_availability(self) -> Dict[str, any]:
+    async def check_availability(self) -> Dict[str, Union[bool, Optional[str]]]:
         """Check if RAG is available and configured"""
         try:
-            response = await self.client.request("GET", "/api/rag/health")
-            data = response.json()
-            return {
-                "available": data.get("available", False),
-                "message": data.get("message"),
-            }
-        except Exception:
+            await self.query("__pluggedin_health_check__", include_metadata=False)
+            return {"available": True}
+        except Exception as exc:  # pragma: no cover - best effort
             return {
                 "available": False,
-                "message": "RAG service is not available",
+                "message": str(exc),
             }
 
-    async def get_storage_stats(self, project_uuid: Optional[str] = None) -> Dict[str, any]:
-        """Get RAG storage statistics"""
-        params = {"projectUuid": project_uuid} if project_uuid else {}
-        response = await self.client.request("GET", "/api/rag/stats", params=params)
-        data = response.json()
-
-        return {
-            "document_count": data.get("documentCount", 0),
-            "total_size": data.get("totalSize", 0),
-            "vector_count": data.get("vectorCount"),
-            "last_updated": data.get("lastUpdated"),
-        }
-
-    async def refresh_document(
-        self, document_id: str, project_uuid: Optional[str] = None
-    ) -> Dict[str, any]:
-        """Refresh RAG index for a specific document"""
-        payload = {}
-        if project_uuid:
-            payload["projectUuid"] = project_uuid
+    async def get_storage_stats(self, user_id: str) -> RagStorageStats:
+        """Get RAG storage statistics for the authenticated user"""
+        if not user_id:
+            raise PluggedInError("user_id is required to fetch storage statistics")
 
         response = await self.client.request(
-            "POST", f"/api/rag/refresh/{document_id}", json=payload
+            "GET",
+            "/api/rag/storage-stats",
+            params={"user_id": user_id},
         )
         data = response.json()
 
-        return {
-            "success": data.get("success", False),
-            "message": data.get("message"),
-        }
-
-    async def remove_document(
-        self, document_id: str, project_uuid: Optional[str] = None
-    ) -> Dict[str, any]:
-        """Remove a document from the RAG index"""
-        payload = {}
-        if project_uuid:
-            payload["projectUuid"] = project_uuid
-
-        response = await self.client.request(
-            "DELETE", f"/api/rag/documents/{document_id}", json=payload
+        return RagStorageStats(
+            documents_count=data.get("documents_count", 0),
+            total_chunks=data.get("total_chunks", 0),
+            estimated_storage_mb=data.get("estimated_storage_mb", 0.0),
+            vectors_count=data.get("vectors_count"),
+            embedding_dimension=data.get("embedding_dimension"),
+            is_estimate=data.get("is_estimate", True),
         )
-        data = response.json()
 
-        return {
-            "success": data.get("success", False),
-            "message": data.get("message"),
-        }
+    async def refresh_document(self, *args, **kwargs) -> None:
+        """Legacy refresh flow is no longer exposed via the public API."""
+        raise PluggedInError(
+            "Document refresh is no longer available via the public API."
+        )
 
-    def _transform_rag_response(self, data: Dict) -> RagResponse:
+    async def remove_document(self, *args, **kwargs) -> None:
+        """Legacy remove flow is no longer exposed via the public API."""
+        raise PluggedInError(
+            "Document removal is no longer available via the public API."
+        )
+
+    def _parse_rag_response(self, response) -> Union[str, Dict]:
+        """Best-effort parsing for RAG responses that may return text or JSON."""
+        try:
+            return response.json()
+        except ValueError:
+            return response.text
+
+    def _transform_rag_response(self, data: Union[str, Dict]) -> RagResponse:
         """Transform API response to RagResponse type"""
-        if "success" in data:
-            return RagResponse(**data)
-
-        # Transform legacy format
-        if "answer" in data or "results" in data:
+        if isinstance(data, str):
             return RagResponse(
                 success=True,
-                answer=data.get("answer") or data.get("results"),
-                sources=data.get("sources", []),
-                document_ids=data.get("documentIds") or data.get("document_ids", []),
-                documents=data.get("documents", []),
+                answer=data,
+                sources=[],
+                document_ids=[],
+                documents=[],
             )
 
-        # Error response
+        if not isinstance(data, dict):
+            return RagResponse(
+                success=False,
+                error="Unexpected response format from RAG query endpoint",
+            )
+
+        answer = (
+            data.get("answer")
+            or data.get("response")
+            or data.get("results")
+            or data.get("message")
+            or ""
+        )
+
+        sources = data.get("sources") or []
+        document_ids = data.get("documentIds") or data.get("document_ids") or []
+
+        documents = [
+            RagSourceDocument(
+                id=document_id,
+                name=sources[index] if index < len(sources) else f"Document {index + 1}",
+            )
+            for index, document_id in enumerate(document_ids)
+        ]
+
         return RagResponse(
-            success=False,
-            error=data.get("error", "Unknown error occurred"),
+            success=data.get("success", True),
+            answer=answer,
+            sources=sources,
+            document_ids=document_ids,
+            documents=documents,
+            error=data.get("error"),
         )

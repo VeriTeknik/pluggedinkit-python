@@ -161,7 +161,14 @@ class DocumentService:
         if not data.get("success"):
             raise PluggedInError(data.get("error", "Failed to create document"))
 
-        return Document(**data["document"])
+        document_id = data.get("documentId")
+        if not document_id:
+            raise PluggedInError("Server did not return a document id")
+
+        document = self.get(document_id)
+        if isinstance(document, DocumentWithContent):
+            return Document(**document.model_dump(exclude={"content", "content_encoding"}))
+        return document
 
 
 class AsyncDocumentService:
@@ -304,4 +311,11 @@ class AsyncDocumentService:
         if not data.get("success"):
             raise PluggedInError(data.get("error", "Failed to create document"))
 
-        return Document(**data["document"])
+        document_id = data.get("documentId")
+        if not document_id:
+            raise PluggedInError("Server did not return a document id")
+
+        document = await self.get(document_id)
+        if isinstance(document, DocumentWithContent):
+            return Document(**document.model_dump(exclude={"content", "content_encoding"}))
+        return document

@@ -256,3 +256,13 @@ class RagResponse(BaseModel):
     document_ids: Optional[List[str]] = None
     documents: Optional[List[RagSourceDocument]] = None
     error: Optional[str] = None
+
+
+class RagStorageStats(BaseModel):
+    """RAG storage statistics"""
+    documents_count: int
+    total_chunks: int
+    estimated_storage_mb: float
+    vectors_count: Optional[int] = None
+    embedding_dimension: Optional[int] = None
+    is_estimate: Optional[bool] = None
