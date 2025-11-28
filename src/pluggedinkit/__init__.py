@@ -15,6 +15,18 @@ from .exceptions import (
     ValidationError,
 )
 from .types import (
+    # Clipboard types
+    ClipboardEntry,
+    ClipboardListResponse,
+    ClipboardSetRequest,
+    ClipboardPushRequest,
+    ClipboardGetFilters,
+    ClipboardDeleteRequest,
+    ClipboardResponse,
+    ClipboardDeleteResponse,
+    ClipboardEncoding,
+    ClipboardVisibility,
+    # Document types
     Document,
     DocumentWithContent,
     DocumentListResponse,
@@ -38,6 +50,18 @@ __all__ = [
     "RateLimitError",
     "NotFoundError",
     "ValidationError",
+    # Clipboard types
+    "ClipboardEntry",
+    "ClipboardListResponse",
+    "ClipboardSetRequest",
+    "ClipboardPushRequest",
+    "ClipboardGetFilters",
+    "ClipboardDeleteRequest",
+    "ClipboardResponse",
+    "ClipboardDeleteResponse",
+    "ClipboardEncoding",
+    "ClipboardVisibility",
+    # Document types
     "Document",
     "DocumentWithContent",
     "DocumentListResponse",

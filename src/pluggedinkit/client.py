@@ -12,6 +12,7 @@ from .exceptions import (
     PluggedInError,
     RateLimitError,
 )
+from .services.clipboard import ClipboardService, AsyncClipboardService
 from .services.documents import DocumentService, AsyncDocumentService
 from .services.rag import RagService, AsyncRagService
 from .services.uploads import UploadService, AsyncUploadService
@@ -96,6 +97,7 @@ class PluggedInClient(BaseClient):
         )
 
         # Initialize services
+        self.clipboard = ClipboardService(self)
         self.documents = DocumentService(self)
         self.rag = RagService(self)
         self.uploads = UploadService(self)
@@ -195,6 +197,7 @@ class AsyncPluggedInClient(BaseClient):
         )
 
         # Initialize async services
+        self.clipboard = AsyncClipboardService(self)
         self.documents = AsyncDocumentService(self)
         self.rag = AsyncRagService(self)
         self.uploads = AsyncUploadService(self)
