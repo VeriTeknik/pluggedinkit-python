@@ -283,6 +283,17 @@ class ClipboardVisibility(str, Enum):
     PUBLIC = "public"
 
 
+class ClipboardSource(str, Enum):
+    """Clipboard data source"""
+    UI = "ui"
+    SDK = "sdk"
+    MCP = "mcp"
+
+
+# Default source for backward compatibility with older data
+DEFAULT_CLIPBOARD_SOURCE = ClipboardSource.UI
+
+
 class ClipboardEntry(BaseModel):
     """Clipboard entry model"""
     uuid: str
@@ -295,6 +306,8 @@ class ClipboardEntry(BaseModel):
     visibility: ClipboardVisibility = ClipboardVisibility.PRIVATE
     created_by_tool: Optional[str] = Field(None, alias="createdByTool")
     created_by_model: Optional[str] = Field(None, alias="createdByModel")
+    # Optional for backward compatibility with older API responses
+    source: Optional[ClipboardSource] = DEFAULT_CLIPBOARD_SOURCE
     created_at: datetime = Field(alias="createdAt")
     updated_at: datetime = Field(alias="updatedAt")
     expires_at: Optional[datetime] = Field(None, alias="expiresAt")

@@ -26,6 +26,8 @@ from .types import (
     ClipboardDeleteResponse,
     ClipboardEncoding,
     ClipboardVisibility,
+    ClipboardSource,
+    DEFAULT_CLIPBOARD_SOURCE,
     # Document types
     Document,
     DocumentWithContent,
@@ -61,6 +63,8 @@ __all__ = [
     "ClipboardDeleteResponse",
     "ClipboardEncoding",
     "ClipboardVisibility",
+    "ClipboardSource",
+    "DEFAULT_CLIPBOARD_SOURCE",
     # Document types
     "Document",
     "DocumentWithContent",
