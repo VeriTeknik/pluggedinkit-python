@@ -78,6 +78,7 @@ class ClipboardService:
             "contentType": content_type,
             "encoding": encoding,
             "visibility": visibility,
+            "source": "sdk",  # Hardcoded: SDK always uses 'sdk' source
         }
 
         if created_by_tool:
@@ -111,6 +112,7 @@ class ClipboardService:
             "contentType": content_type,
             "encoding": encoding,
             "visibility": visibility,
+            "source": "sdk",  # Hardcoded: SDK always uses 'sdk' source
         }
 
         if created_by_tool:
@@ -236,6 +238,7 @@ class AsyncClipboardService:
             "contentType": content_type,
             "encoding": encoding,
             "visibility": visibility,
+            "source": "sdk",  # Hardcoded: SDK always uses 'sdk' source
         }
 
         if created_by_tool:
@@ -269,6 +272,7 @@ class AsyncClipboardService:
             "contentType": content_type,
             "encoding": encoding,
             "visibility": visibility,
+            "source": "sdk",  # Hardcoded: SDK always uses 'sdk' source
         }
 
         if created_by_tool:
