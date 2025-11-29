@@ -12,6 +12,7 @@ from ..types import (
     ClipboardPushRequest,
     ClipboardResponse,
     ClipboardSetRequest,
+    ClipboardSource,
 )
 
 if TYPE_CHECKING:
@@ -78,7 +79,7 @@ class ClipboardService:
             "contentType": content_type,
             "encoding": encoding,
             "visibility": visibility,
-            "source": "sdk",  # Hardcoded: SDK always uses 'sdk' source
+            "source": ClipboardSource.SDK.value,  # SDK always uses 'sdk' source
         }
 
         if created_by_tool:
@@ -114,7 +115,7 @@ class ClipboardService:
             "contentType": content_type,
             "encoding": encoding,
             "visibility": visibility,
-            "source": "sdk",  # Hardcoded: SDK always uses 'sdk' source
+            "source": ClipboardSource.SDK.value,  # SDK always uses 'sdk' source
         }
 
         if created_by_tool:
@@ -244,7 +245,7 @@ class AsyncClipboardService:
             "contentType": content_type,
             "encoding": encoding,
             "visibility": visibility,
-            "source": "sdk",  # Hardcoded: SDK always uses 'sdk' source
+            "source": ClipboardSource.SDK.value,  # SDK always uses 'sdk' source
         }
 
         if created_by_tool:
@@ -280,7 +281,7 @@ class AsyncClipboardService:
             "contentType": content_type,
             "encoding": encoding,
             "visibility": visibility,
-            "source": "sdk",  # Hardcoded: SDK always uses 'sdk' source
+            "source": ClipboardSource.SDK.value,  # SDK always uses 'sdk' source
         }
 
         if created_by_tool:
