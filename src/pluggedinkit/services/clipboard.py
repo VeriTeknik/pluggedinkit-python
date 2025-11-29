@@ -85,7 +85,9 @@ class ClipboardService:
             payload["createdByTool"] = created_by_tool
         if created_by_model:
             payload["createdByModel"] = created_by_model
-        if ttl_seconds:
+        if ttl_seconds is not None:
+            if ttl_seconds <= 0:
+                raise ValueError("ttl_seconds must be greater than 0 when provided")
             payload["ttlSeconds"] = ttl_seconds
 
         response = self.client.request("POST", "/api/clipboard", json=payload)
@@ -119,7 +121,9 @@ class ClipboardService:
             payload["createdByTool"] = created_by_tool
         if created_by_model:
             payload["createdByModel"] = created_by_model
-        if ttl_seconds:
+        if ttl_seconds is not None:
+            if ttl_seconds <= 0:
+                raise ValueError("ttl_seconds must be greater than 0 when provided")
             payload["ttlSeconds"] = ttl_seconds
 
         response = self.client.request("POST", "/api/clipboard/push", json=payload)
@@ -167,11 +171,13 @@ class ClipboardService:
 
         for entry in entries:
             try:
+                success = False
                 if entry.name:
-                    self.delete(name=entry.name)
+                    success = self.delete(name=entry.name)
                 elif entry.idx is not None:
-                    self.delete(idx=entry.idx)
-                deleted += 1
+                    success = self.delete(idx=entry.idx)
+                if success:
+                    deleted += 1
             except PluggedInError:
                 pass
 
@@ -245,7 +251,9 @@ class AsyncClipboardService:
             payload["createdByTool"] = created_by_tool
         if created_by_model:
             payload["createdByModel"] = created_by_model
-        if ttl_seconds:
+        if ttl_seconds is not None:
+            if ttl_seconds <= 0:
+                raise ValueError("ttl_seconds must be greater than 0 when provided")
             payload["ttlSeconds"] = ttl_seconds
 
         response = await self.client.request("POST", "/api/clipboard", json=payload)
@@ -279,7 +287,9 @@ class AsyncClipboardService:
             payload["createdByTool"] = created_by_tool
         if created_by_model:
             payload["createdByModel"] = created_by_model
-        if ttl_seconds:
+        if ttl_seconds is not None:
+            if ttl_seconds <= 0:
+                raise ValueError("ttl_seconds must be greater than 0 when provided")
             payload["ttlSeconds"] = ttl_seconds
 
         response = await self.client.request("POST", "/api/clipboard/push", json=payload)
@@ -327,11 +337,13 @@ class AsyncClipboardService:
 
         for entry in entries:
             try:
+                success = False
                 if entry.name:
-                    await self.delete(name=entry.name)
+                    success = await self.delete(name=entry.name)
                 elif entry.idx is not None:
-                    await self.delete(idx=entry.idx)
-                deleted += 1
+                    success = await self.delete(idx=entry.idx)
+                if success:
+                    deleted += 1
             except PluggedInError:
                 pass
 
