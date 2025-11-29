@@ -27,6 +27,7 @@ from .types import (
     ClipboardEncoding,
     ClipboardVisibility,
     ClipboardSource,
+    DEFAULT_CLIPBOARD_SOURCE,
     # Document types
     Document,
     DocumentWithContent,
@@ -63,6 +64,7 @@ __all__ = [
     "ClipboardEncoding",
     "ClipboardVisibility",
     "ClipboardSource",
+    "DEFAULT_CLIPBOARD_SOURCE",
     # Document types
     "Document",
     "DocumentWithContent",
