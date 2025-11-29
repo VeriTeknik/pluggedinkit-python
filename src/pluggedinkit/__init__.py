@@ -14,6 +14,7 @@ from .exceptions import (
     NotFoundError,
     ValidationError,
 )
+from .services.clipboard import ClearAllResult
 from .types import (
     # Clipboard types
     ClipboardEntry,
@@ -64,6 +65,7 @@ __all__ = [
     "ClipboardEncoding",
     "ClipboardVisibility",
     "ClipboardSource",
+    "ClearAllResult",
     "DEFAULT_CLIPBOARD_SOURCE",
     # Document types
     "Document",
