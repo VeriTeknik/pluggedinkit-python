@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class DocumentSource(str, Enum):
@@ -356,11 +356,23 @@ class ClipboardGetFilters(BaseModel):
     name: Optional[str] = None
     idx: Optional[int] = None
 
+    @model_validator(mode='after')
+    def check_name_or_idx(self) -> 'ClipboardGetFilters':
+        if self.name is None and self.idx is None:
+            raise ValueError("Either 'name' or 'idx' must be provided")
+        return self
+
 
 class ClipboardDeleteRequest(BaseModel):
     """Request for deleting a clipboard entry"""
     name: Optional[str] = None
     idx: Optional[int] = None
+
+    @model_validator(mode='after')
+    def check_name_or_idx(self) -> 'ClipboardDeleteRequest':
+        if self.name is None and self.idx is None:
+            raise ValueError("Either 'name' or 'idx' must be provided")
+        return self
 
 
 class ClipboardResponse(BaseModel):

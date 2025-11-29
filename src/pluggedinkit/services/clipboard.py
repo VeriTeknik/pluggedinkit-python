@@ -6,6 +6,7 @@ from ..exceptions import PluggedInError
 from ..types import (
     ClipboardDeleteRequest,
     ClipboardDeleteResponse,
+    ClipboardEncoding,
     ClipboardEntry,
     ClipboardGetFilters,
     ClipboardListResponse,
@@ -13,10 +14,44 @@ from ..types import (
     ClipboardResponse,
     ClipboardSetRequest,
     ClipboardSource,
+    ClipboardVisibility,
 )
 
 if TYPE_CHECKING:
     from ..client import AsyncPluggedInClient, PluggedInClient
+
+
+def _build_clipboard_payload(
+    value: str,
+    name: Optional[str] = None,
+    content_type: str = "text/plain",
+    encoding: ClipboardEncoding = ClipboardEncoding.UTF8,
+    visibility: ClipboardVisibility = ClipboardVisibility.PRIVATE,
+    created_by_tool: Optional[str] = None,
+    created_by_model: Optional[str] = None,
+    ttl_seconds: Optional[int] = None,
+) -> dict:
+    """Build a clipboard request payload with common fields."""
+    payload = {
+        "value": value,
+        "contentType": content_type,
+        "encoding": encoding.value if isinstance(encoding, ClipboardEncoding) else encoding,
+        "visibility": visibility.value if isinstance(visibility, ClipboardVisibility) else visibility,
+        "source": ClipboardSource.SDK.value,
+    }
+
+    if name:
+        payload["name"] = name
+    if created_by_tool:
+        payload["createdByTool"] = created_by_tool
+    if created_by_model:
+        payload["createdByModel"] = created_by_model
+    if ttl_seconds is not None:
+        if ttl_seconds <= 0:
+            raise ValueError("ttl_seconds must be greater than 0 when provided")
+        payload["ttlSeconds"] = ttl_seconds
+
+    return payload
 
 
 class ClipboardService:
@@ -66,30 +101,23 @@ class ClipboardService:
         name: str,
         value: str,
         content_type: str = "text/plain",
-        encoding: str = "utf-8",
-        visibility: str = "private",
+        encoding: Union[ClipboardEncoding, str] = ClipboardEncoding.UTF8,
+        visibility: Union[ClipboardVisibility, str] = ClipboardVisibility.PRIVATE,
         created_by_tool: Optional[str] = None,
         created_by_model: Optional[str] = None,
         ttl_seconds: Optional[int] = None,
     ) -> ClipboardEntry:
         """Set a named clipboard entry (upsert)"""
-        payload = {
-            "name": name,
-            "value": value,
-            "contentType": content_type,
-            "encoding": encoding,
-            "visibility": visibility,
-            "source": ClipboardSource.SDK.value,  # SDK always uses 'sdk' source
-        }
-
-        if created_by_tool:
-            payload["createdByTool"] = created_by_tool
-        if created_by_model:
-            payload["createdByModel"] = created_by_model
-        if ttl_seconds is not None:
-            if ttl_seconds <= 0:
-                raise ValueError("ttl_seconds must be greater than 0 when provided")
-            payload["ttlSeconds"] = ttl_seconds
+        payload = _build_clipboard_payload(
+            value=value,
+            name=name,
+            content_type=content_type,
+            encoding=encoding if isinstance(encoding, ClipboardEncoding) else ClipboardEncoding(encoding),
+            visibility=visibility if isinstance(visibility, ClipboardVisibility) else ClipboardVisibility(visibility),
+            created_by_tool=created_by_tool,
+            created_by_model=created_by_model,
+            ttl_seconds=ttl_seconds,
+        )
 
         response = self.client.request("POST", "/api/clipboard", json=payload)
         data = response.json()
@@ -103,29 +131,22 @@ class ClipboardService:
         self,
         value: str,
         content_type: str = "text/plain",
-        encoding: str = "utf-8",
-        visibility: str = "private",
+        encoding: Union[ClipboardEncoding, str] = ClipboardEncoding.UTF8,
+        visibility: Union[ClipboardVisibility, str] = ClipboardVisibility.PRIVATE,
         created_by_tool: Optional[str] = None,
         created_by_model: Optional[str] = None,
         ttl_seconds: Optional[int] = None,
     ) -> ClipboardEntry:
         """Push a value to the indexed clipboard (auto-increment index)"""
-        payload = {
-            "value": value,
-            "contentType": content_type,
-            "encoding": encoding,
-            "visibility": visibility,
-            "source": ClipboardSource.SDK.value,  # SDK always uses 'sdk' source
-        }
-
-        if created_by_tool:
-            payload["createdByTool"] = created_by_tool
-        if created_by_model:
-            payload["createdByModel"] = created_by_model
-        if ttl_seconds is not None:
-            if ttl_seconds <= 0:
-                raise ValueError("ttl_seconds must be greater than 0 when provided")
-            payload["ttlSeconds"] = ttl_seconds
+        payload = _build_clipboard_payload(
+            value=value,
+            content_type=content_type,
+            encoding=encoding if isinstance(encoding, ClipboardEncoding) else ClipboardEncoding(encoding),
+            visibility=visibility if isinstance(visibility, ClipboardVisibility) else ClipboardVisibility(visibility),
+            created_by_tool=created_by_tool,
+            created_by_model=created_by_model,
+            ttl_seconds=ttl_seconds,
+        )
 
         response = self.client.request("POST", "/api/clipboard/push", json=payload)
         data = response.json()
@@ -232,30 +253,23 @@ class AsyncClipboardService:
         name: str,
         value: str,
         content_type: str = "text/plain",
-        encoding: str = "utf-8",
-        visibility: str = "private",
+        encoding: Union[ClipboardEncoding, str] = ClipboardEncoding.UTF8,
+        visibility: Union[ClipboardVisibility, str] = ClipboardVisibility.PRIVATE,
         created_by_tool: Optional[str] = None,
         created_by_model: Optional[str] = None,
         ttl_seconds: Optional[int] = None,
     ) -> ClipboardEntry:
         """Set a named clipboard entry (upsert)"""
-        payload = {
-            "name": name,
-            "value": value,
-            "contentType": content_type,
-            "encoding": encoding,
-            "visibility": visibility,
-            "source": ClipboardSource.SDK.value,  # SDK always uses 'sdk' source
-        }
-
-        if created_by_tool:
-            payload["createdByTool"] = created_by_tool
-        if created_by_model:
-            payload["createdByModel"] = created_by_model
-        if ttl_seconds is not None:
-            if ttl_seconds <= 0:
-                raise ValueError("ttl_seconds must be greater than 0 when provided")
-            payload["ttlSeconds"] = ttl_seconds
+        payload = _build_clipboard_payload(
+            value=value,
+            name=name,
+            content_type=content_type,
+            encoding=encoding if isinstance(encoding, ClipboardEncoding) else ClipboardEncoding(encoding),
+            visibility=visibility if isinstance(visibility, ClipboardVisibility) else ClipboardVisibility(visibility),
+            created_by_tool=created_by_tool,
+            created_by_model=created_by_model,
+            ttl_seconds=ttl_seconds,
+        )
 
         response = await self.client.request("POST", "/api/clipboard", json=payload)
         data = response.json()
@@ -269,29 +283,22 @@ class AsyncClipboardService:
         self,
         value: str,
         content_type: str = "text/plain",
-        encoding: str = "utf-8",
-        visibility: str = "private",
+        encoding: Union[ClipboardEncoding, str] = ClipboardEncoding.UTF8,
+        visibility: Union[ClipboardVisibility, str] = ClipboardVisibility.PRIVATE,
         created_by_tool: Optional[str] = None,
         created_by_model: Optional[str] = None,
         ttl_seconds: Optional[int] = None,
     ) -> ClipboardEntry:
         """Push a value to the indexed clipboard (auto-increment index)"""
-        payload = {
-            "value": value,
-            "contentType": content_type,
-            "encoding": encoding,
-            "visibility": visibility,
-            "source": ClipboardSource.SDK.value,  # SDK always uses 'sdk' source
-        }
-
-        if created_by_tool:
-            payload["createdByTool"] = created_by_tool
-        if created_by_model:
-            payload["createdByModel"] = created_by_model
-        if ttl_seconds is not None:
-            if ttl_seconds <= 0:
-                raise ValueError("ttl_seconds must be greater than 0 when provided")
-            payload["ttlSeconds"] = ttl_seconds
+        payload = _build_clipboard_payload(
+            value=value,
+            content_type=content_type,
+            encoding=encoding if isinstance(encoding, ClipboardEncoding) else ClipboardEncoding(encoding),
+            visibility=visibility if isinstance(visibility, ClipboardVisibility) else ClipboardVisibility(visibility),
+            created_by_tool=created_by_tool,
+            created_by_model=created_by_model,
+            ttl_seconds=ttl_seconds,
+        )
 
         response = await self.client.request("POST", "/api/clipboard/push", json=payload)
         data = response.json()
