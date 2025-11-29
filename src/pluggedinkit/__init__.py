@@ -14,7 +14,22 @@ from .exceptions import (
     NotFoundError,
     ValidationError,
 )
+from .services.clipboard import ClearAllResult
 from .types import (
+    # Clipboard types
+    ClipboardEntry,
+    ClipboardListResponse,
+    ClipboardSetRequest,
+    ClipboardPushRequest,
+    ClipboardGetFilters,
+    ClipboardDeleteRequest,
+    ClipboardResponse,
+    ClipboardDeleteResponse,
+    ClipboardEncoding,
+    ClipboardVisibility,
+    ClipboardSource,
+    DEFAULT_CLIPBOARD_SOURCE,
+    # Document types
     Document,
     DocumentWithContent,
     DocumentListResponse,
@@ -38,6 +53,21 @@ __all__ = [
     "RateLimitError",
     "NotFoundError",
     "ValidationError",
+    # Clipboard types
+    "ClipboardEntry",
+    "ClipboardListResponse",
+    "ClipboardSetRequest",
+    "ClipboardPushRequest",
+    "ClipboardGetFilters",
+    "ClipboardDeleteRequest",
+    "ClipboardResponse",
+    "ClipboardDeleteResponse",
+    "ClipboardEncoding",
+    "ClipboardVisibility",
+    "ClipboardSource",
+    "ClearAllResult",
+    "DEFAULT_CLIPBOARD_SOURCE",
+    # Document types
     "Document",
     "DocumentWithContent",
     "DocumentListResponse",

@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class DocumentSource(str, Enum):
@@ -266,3 +266,124 @@ class RagStorageStats(BaseModel):
     vectors_count: Optional[int] = None
     embedding_dimension: Optional[int] = None
     is_estimate: Optional[bool] = None
+
+
+# Clipboard types
+class ClipboardEncoding(str, Enum):
+    """Clipboard content encoding"""
+    UTF8 = "utf-8"
+    BASE64 = "base64"
+    HEX = "hex"
+
+
+class ClipboardVisibility(str, Enum):
+    """Clipboard visibility levels"""
+    PRIVATE = "private"
+    WORKSPACE = "workspace"
+    PUBLIC = "public"
+
+
+class ClipboardSource(str, Enum):
+    """Clipboard data source"""
+    UI = "ui"
+    SDK = "sdk"
+    MCP = "mcp"
+
+
+# Default source for backward compatibility with older data
+DEFAULT_CLIPBOARD_SOURCE = ClipboardSource.UI
+
+
+class ClipboardEntry(BaseModel):
+    """Clipboard entry model"""
+    uuid: str
+    name: Optional[str] = None
+    idx: Optional[int] = None
+    value: str
+    content_type: str = Field(alias="contentType", default="text/plain")
+    encoding: ClipboardEncoding = ClipboardEncoding.UTF8
+    size_bytes: int = Field(alias="sizeBytes")
+    visibility: ClipboardVisibility = ClipboardVisibility.PRIVATE
+    created_by_tool: Optional[str] = Field(None, alias="createdByTool")
+    created_by_model: Optional[str] = Field(None, alias="createdByModel")
+    # Optional for backward compatibility with older API responses
+    source: Optional[ClipboardSource] = DEFAULT_CLIPBOARD_SOURCE
+    created_at: datetime = Field(alias="createdAt")
+    updated_at: datetime = Field(alias="updatedAt")
+    expires_at: Optional[datetime] = Field(None, alias="expiresAt")
+
+    class Config:
+        populate_by_name = True
+
+
+class ClipboardListResponse(BaseModel):
+    """Response for clipboard listing"""
+    success: bool
+    entries: List[ClipboardEntry]
+
+
+class ClipboardSetRequest(BaseModel):
+    """Request for setting a named clipboard entry"""
+    name: str = Field(..., min_length=1, max_length=255)
+    value: str
+    content_type: Optional[str] = Field(None, alias="contentType", max_length=256)
+    encoding: Optional[ClipboardEncoding] = None
+    visibility: Optional[ClipboardVisibility] = None
+    created_by_tool: Optional[str] = Field(None, alias="createdByTool", max_length=255)
+    created_by_model: Optional[str] = Field(None, alias="createdByModel", max_length=255)
+    ttl_seconds: Optional[int] = Field(None, alias="ttlSeconds", gt=0)
+
+    class Config:
+        populate_by_name = True
+
+
+class ClipboardPushRequest(BaseModel):
+    """Request for pushing to indexed clipboard"""
+    value: str
+    content_type: Optional[str] = Field(None, alias="contentType", max_length=256)
+    encoding: Optional[ClipboardEncoding] = None
+    visibility: Optional[ClipboardVisibility] = None
+    created_by_tool: Optional[str] = Field(None, alias="createdByTool", max_length=255)
+    created_by_model: Optional[str] = Field(None, alias="createdByModel", max_length=255)
+    ttl_seconds: Optional[int] = Field(None, alias="ttlSeconds", gt=0)
+
+    class Config:
+        populate_by_name = True
+
+
+class ClipboardGetFilters(BaseModel):
+    """Filters for getting a clipboard entry"""
+    name: Optional[str] = None
+    idx: Optional[int] = None
+
+    @model_validator(mode='after')
+    def check_name_or_idx(self) -> 'ClipboardGetFilters':
+        if self.name is None and self.idx is None:
+            raise ValueError("Either 'name' or 'idx' must be provided")
+        return self
+
+
+class ClipboardDeleteRequest(BaseModel):
+    """Request for deleting a clipboard entry"""
+    name: Optional[str] = None
+    idx: Optional[int] = None
+
+    @model_validator(mode='after')
+    def check_name_or_idx(self) -> 'ClipboardDeleteRequest':
+        if self.name is None and self.idx is None:
+            raise ValueError("Either 'name' or 'idx' must be provided")
+        return self
+
+
+class ClipboardResponse(BaseModel):
+    """Response for clipboard operations"""
+    success: bool
+    entry: Optional[ClipboardEntry] = None
+    error: Optional[str] = None
+
+
+class ClipboardDeleteResponse(BaseModel):
+    """Response for clipboard delete operations"""
+    success: bool
+    deleted: Optional[bool] = None
+    error: Optional[str] = None

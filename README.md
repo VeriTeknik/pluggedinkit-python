@@ -66,6 +66,7 @@ asyncio.run(main())
 - 📄 **Document Management** - Full CRUD operations with type safety
 - 🔍 **Semantic Search** - AI-powered document search
 - 🤖 **RAG Integration** - Natural language queries to your knowledge base
+- 📋 **Clipboard/Memory** - Persistent key-value storage for MCP tools and AI agents
 - 📤 **File Uploads** - Support for various file formats
 - 🔄 **Version Control** - Document versioning and history
 - ⚡ **Async Support** - Both sync and async clients
@@ -376,6 +377,96 @@ async def rag_operations():
 
 asyncio.run(rag_operations())
 ```
+
+### Clipboard Operations
+
+The clipboard provides persistent key-value storage for MCP tools and AI agents.
+
+#### Set Named Entry
+
+```python
+entry = client.clipboard.set(
+    name="user_preferences",
+    value='{"theme": "dark", "lang": "en"}',
+    content_type="application/json",
+    encoding="utf-8",
+    visibility="private",
+    ttl_seconds=86400  # 24 hours
+)
+
+print(f"Created entry: {entry.uuid}")
+print(f"Source: {entry.source}")  # 'sdk' - automatically set
+```
+
+#### Get Entry
+
+```python
+# By name
+entry = client.clipboard.get(name="user_preferences")
+print(entry.value)
+
+# By index (stack access)
+latest = client.clipboard.get(idx=0)
+```
+
+#### Push to Stack
+
+```python
+entry = client.clipboard.push(
+    value="Processing step 1 result",
+    content_type="text/plain"
+)
+
+print(f"Pushed to index: {entry.idx}")
+```
+
+#### Pop from Stack
+
+```python
+entry = client.clipboard.pop()
+if entry:
+    print(f"Popped value: {entry.value}")
+```
+
+#### List and Delete
+
+```python
+# List all entries
+response = client.clipboard.list()
+for entry in response.entries:
+    label = entry.name or f"idx:{entry.idx}"
+    print(f"{label} - source: {entry.source}")
+
+# Delete by name
+client.clipboard.delete(name="old_entry")
+
+# Clear all
+client.clipboard.clear_all()
+```
+
+#### Clipboard Entry Structure
+
+```python
+from pluggedinkit import ClipboardEntry, ClipboardSource
+
+# ClipboardEntry fields:
+# - uuid: str
+# - name: Optional[str]           # Semantic key
+# - idx: Optional[int]            # Stack index
+# - value: str
+# - content_type: str
+# - encoding: "utf-8" | "base64" | "hex"
+# - size_bytes: int
+# - visibility: "private" | "workspace" | "public"
+# - created_by_tool: Optional[str]
+# - created_by_model: Optional[str]
+# - source: Optional[ClipboardSource]  # Auto-set: ui, sdk, or mcp
+# - created_at: datetime
+# - updated_at: datetime
+# - expires_at: Optional[datetime]
+```
+
+> **Note**: The `source` field is automatically set to `ClipboardSource.SDK` when using this SDK. It indicates how the entry was created (UI, SDK, or MCP proxy).
 
 ### Error Handling
 
