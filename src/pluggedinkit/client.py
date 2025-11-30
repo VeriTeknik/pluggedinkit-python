@@ -16,6 +16,7 @@ from .services.clipboard import ClipboardService, AsyncClipboardService
 from .services.documents import DocumentService, AsyncDocumentService
 from .services.rag import RagService, AsyncRagService
 from .services.uploads import UploadService, AsyncUploadService
+from .services.agents import AgentService, AsyncAgentService
 
 DEFAULT_BASE_URL = "https://plugged.in"
 DEFAULT_TIMEOUT = 30.0  # seconds
@@ -101,6 +102,7 @@ class PluggedInClient(BaseClient):
         self.documents = DocumentService(self)
         self.rag = RagService(self)
         self.uploads = UploadService(self)
+        self.agents = AgentService(self)
 
     def request(
         self,
@@ -201,6 +203,7 @@ class AsyncPluggedInClient(BaseClient):
         self.documents = AsyncDocumentService(self)
         self.rag = AsyncRagService(self)
         self.uploads = AsyncUploadService(self)
+        self.agents = AsyncAgentService(self)
 
     async def request(
         self,

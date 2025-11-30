@@ -6,7 +6,7 @@ Official SDK for interacting with Plugged.in's document library and RAG capabili
 
 __version__ = "1.0.0"
 
-from .client import PluggedInClient
+from .client import PluggedInClient, AsyncPluggedInClient
 from .exceptions import (
     PluggedInError,
     AuthenticationError,
@@ -45,9 +45,21 @@ from .types import (
     ModelInfo,
     AIMetadata,
 )
+from .services.agents import (
+    Agent,
+    CreateAgentRequest,
+    ResourceRequirements,
+    Heartbeat,
+    Metrics,
+    LifecycleEvent,
+    AgentDetails,
+    AgentService,
+    AsyncAgentService,
+)
 
 __all__ = [
     "PluggedInClient",
+    "AsyncPluggedInClient",
     "PluggedInError",
     "AuthenticationError",
     "RateLimitError",
@@ -82,4 +94,13 @@ __all__ = [
     "RagStorageStats",
     "ModelInfo",
     "AIMetadata",
+    "Agent",
+    "CreateAgentRequest",
+    "ResourceRequirements",
+    "Heartbeat",
+    "Metrics",
+    "LifecycleEvent",
+    "AgentDetails",
+    "AgentService",
+    "AsyncAgentService",
 ]
