@@ -387,3 +387,85 @@ class ClipboardDeleteResponse(BaseModel):
     success: bool
     deleted: Optional[bool] = None
     error: Optional[str] = None
+
+
+# --- Jungian Intelligence Layer ---
+
+
+class IndividuationComponents(BaseModel):
+    """Components that make up the individuation score"""
+    memory_depth: int = Field(alias="memoryDepth")
+    learning_velocity: int = Field(alias="learningVelocity")
+    collective_contribution: int = Field(alias="collectiveContribution")
+    self_awareness: int = Field(alias="selfAwareness")
+
+    class Config:
+        populate_by_name = True
+
+
+class IndividuationResponse(BaseModel):
+    """Response for individuation score query"""
+    total: int
+    level: str
+    weekly_trend: str = Field(alias="weeklyTrend")
+    tip: str
+    components: IndividuationComponents
+
+    class Config:
+        populate_by_name = True
+
+
+class IndividuationHistoryEntry(BaseModel):
+    """A single entry in the individuation score history"""
+    date: str
+    total: int
+    level: str
+    components: IndividuationComponents
+
+    class Config:
+        populate_by_name = True
+
+
+class ArchetypedPattern(BaseModel):
+    """A pattern with archetype classification from the Jungian layer"""
+    uuid: str
+    archetype: str
+    archetype_label: str = Field(alias="archetypeLabel")
+    archetype_weight: float = Field(alias="archetypeWeight")
+    pattern_type: str = Field(alias="patternType")
+    description: str
+    pattern: str
+    confidence: float
+    similarity: float
+
+    class Config:
+        populate_by_name = True
+
+
+class ArchetypeSearchResponse(BaseModel):
+    """Response for archetype-aware pattern search"""
+    patterns: List[ArchetypedPattern]
+
+
+class SynchronicityPattern(BaseModel):
+    """A meaningful coincidence pattern detected across profiles"""
+    uuid: str
+    pattern_type: str = Field(alias="patternType")
+    description: str
+    confidence: float
+    unique_profiles: int = Field(alias="uniqueProfiles")
+
+    class Config:
+        populate_by_name = True
+
+
+class DreamConsolidation(BaseModel):
+    """A dream-cycle consolidation record"""
+    uuid: str
+    source_count: int = Field(alias="sourceCount")
+    token_savings: int = Field(alias="tokenSavings")
+    cluster_similarity: float = Field(alias="clusterSimilarity")
+    created_at: str = Field(alias="createdAt")
+
+    class Config:
+        populate_by_name = True

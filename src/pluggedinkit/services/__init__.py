@@ -2,6 +2,7 @@
 
 from .clipboard import AsyncClipboardService, ClearAllResult, ClipboardService
 from .documents import AsyncDocumentService, DocumentService
+from .jungian import AsyncJungianService, JungianService
 from .rag import AsyncRagService, RagService
 from .uploads import AsyncUploadService, UploadService
 
@@ -11,6 +12,8 @@ __all__ = [
     "ClearAllResult",
     "DocumentService",
     "AsyncDocumentService",
+    "JungianService",
+    "AsyncJungianService",
     "RagService",
     "AsyncRagService",
     "UploadService",

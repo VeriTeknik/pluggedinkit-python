@@ -44,6 +44,14 @@ from .types import (
     RagStorageStats,
     ModelInfo,
     AIMetadata,
+    # Jungian Intelligence types
+    IndividuationComponents,
+    IndividuationResponse,
+    IndividuationHistoryEntry,
+    ArchetypedPattern,
+    ArchetypeSearchResponse,
+    SynchronicityPattern,
+    DreamConsolidation,
 )
 from .services.agents import (
     Agent,
@@ -56,6 +64,7 @@ from .services.agents import (
     AgentService,
     AsyncAgentService,
 )
+from .services.jungian import JungianService, AsyncJungianService
 
 __all__ = [
     "PluggedInClient",
@@ -103,4 +112,14 @@ __all__ = [
     "AgentDetails",
     "AgentService",
     "AsyncAgentService",
+    # Jungian Intelligence types
+    "IndividuationComponents",
+    "IndividuationResponse",
+    "IndividuationHistoryEntry",
+    "ArchetypedPattern",
+    "ArchetypeSearchResponse",
+    "SynchronicityPattern",
+    "DreamConsolidation",
+    "JungianService",
+    "AsyncJungianService",
 ]
