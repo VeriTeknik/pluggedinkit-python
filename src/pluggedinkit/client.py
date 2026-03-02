@@ -14,6 +14,7 @@ from .exceptions import (
 )
 from .services.clipboard import ClipboardService, AsyncClipboardService
 from .services.documents import DocumentService, AsyncDocumentService
+from .services.jungian import JungianService, AsyncJungianService
 from .services.rag import RagService, AsyncRagService
 from .services.uploads import UploadService, AsyncUploadService
 from .services.agents import AgentService, AsyncAgentService
@@ -100,6 +101,7 @@ class PluggedInClient(BaseClient):
         # Initialize services
         self.clipboard = ClipboardService(self)
         self.documents = DocumentService(self)
+        self.jungian = JungianService(self)
         self.rag = RagService(self)
         self.uploads = UploadService(self)
         self.agents = AgentService(self)
@@ -201,6 +203,7 @@ class AsyncPluggedInClient(BaseClient):
         # Initialize async services
         self.clipboard = AsyncClipboardService(self)
         self.documents = AsyncDocumentService(self)
+        self.jungian = AsyncJungianService(self)
         self.rag = AsyncRagService(self)
         self.uploads = AsyncUploadService(self)
         self.agents = AsyncAgentService(self)
